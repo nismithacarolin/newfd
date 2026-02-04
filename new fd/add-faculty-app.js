@@ -23,7 +23,7 @@ function AddFaculty() {
     });
 
     React.useEffect(() => {
-        Storage.getDepartments().then(data => {
+        DataService.getDepartments().then(data => {
             setDepartments(data);
             if (data.length > 0) {
                 setFormData(prev => ({ ...prev, department: data[0].name }));
@@ -32,6 +32,7 @@ function AddFaculty() {
     }, []);
 
     const [message, setMessage] = React.useState({ type: '', text: '' });
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
 
     // Unauthorized Access Check
     if (!user || user.role !== 'admin') {
@@ -57,13 +58,17 @@ function AddFaculty() {
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setMessage({ type: '', text: '' });
+        setIsSubmitting(true);
 
         try {
             // Basic validation
             if (!formData.firstName || !formData.email || !formData.registerNo) {
                 setMessage({ type: 'error', text: 'Please fill in all required fields.' });
+                setIsSubmitting(false); // Enable button again
+                window.scrollTo({ top: 0, behavior: 'smooth' });
                 return;
             }
 
@@ -74,24 +79,26 @@ function AddFaculty() {
                 certifications: formData.certifications ? `Uploaded: ${formData.certifications}` : 'None'
             };
 
-            Storage.addFaculty(newFaculty).then(() => {
-                setMessage({ type: 'success', text: 'Faculty added successfully!' });
+            await DataService.addFaculty(newFaculty);
 
-                // Reset form (optional)
-                setFormData({
-                    firstName: '', lastName: '', age: '', dob: '', gender: 'Male',
-                    department: departments[0]?.name || '', specialization: '', experience: '',
-                    qualification: '', registerNo: '', email: '', address: '',
-                    type: 'Aided', shift: 'Shift I', awards: '', publications: '', certifications: null
-                });
+            setMessage({ type: 'success', text: 'Faculty added successfully!' });
 
-                // Scroll to top
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+            // Reset form
+            setFormData({
+                firstName: '', lastName: '', age: '', dob: '', gender: 'Male',
+                department: departments[0]?.name || '', specialization: '', experience: '',
+                qualification: '', registerNo: '', email: '', address: '',
+                type: 'Aided', shift: 'Shift I', awards: '', publications: '', certifications: null
             });
 
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
         } catch (err) {
-            console.error(err);
-            setMessage({ type: 'error', text: 'An error occurred while saving.' });
+            console.error('Submission Error:', err);
+            setMessage({ type: 'error', text: err.message || 'An error occurred while saving.' });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -126,11 +133,11 @@ function AddFaculty() {
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                                 <div>
                                     <label className="input-label">First Name *</label>
-                                    <input type="text" name="firstName" value={formData.firstName} onChange={handleChange} className="input-field" required />
+                                    <input type="text" name="firstName" value={formData.firstName} onChange={handleChange} className="input-field" />
                                 </div>
                                 <div>
                                     <label className="input-label">Last Name *</label>
-                                    <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} className="input-field" required />
+                                    <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} className="input-field" />
                                 </div>
                                 <div>
                                     <label className="input-label">Date of Birth</label>
@@ -149,8 +156,11 @@ function AddFaculty() {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="input-label">Email Address *</label>
-                                    <input type="email" name="email" value={formData.email} onChange={handleChange} className="input-field" required />
+                                    <input type="email" name="email" value={formData.email} onChange={handleChange} className="input-field" />
+                                </div>
+                                <div>
+                                    <label className="input-label">Phone Number *</label>
+                                    <input type="tel" name="phoneNumber" value={formData.phoneNumber || ''} onChange={handleChange} className="input-field" placeholder="Mobile Number" />
                                 </div>
                                 <div className="md:col-span-3">
                                     <label className="input-label">Address</label>
@@ -168,11 +178,11 @@ function AddFaculty() {
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                                 <div>
                                     <label className="input-label">Register No / ID *</label>
-                                    <input type="text" name="registerNo" value={formData.registerNo} onChange={handleChange} className="input-field" required />
+                                    <input type="text" name="registerNo" value={formData.registerNo} onChange={handleChange} className="input-field" />
                                 </div>
                                 <div>
                                     <label className="input-label">Department *</label>
-                                    <select name="department" value={formData.department} onChange={handleChange} className="input-field" required>
+                                    <select name="department" value={formData.department} onChange={handleChange} className="input-field" >
                                         <option value="" disabled>Select Department</option>
                                         {departments.map(d => (
                                             <option key={d.id} value={d.name}>{d.name}</option>
@@ -247,12 +257,21 @@ function AddFaculty() {
                         </div>
 
                         <div className="pt-6 flex justify-end gap-4">
-                            <button type="button" onClick={() => window.history.back()} className="btn btn-secondary">
+                            <button type="button" onClick={() => window.history.back()} className="btn btn-secondary" disabled={isSubmitting}>
                                 Cancel
                             </button>
-                            <button type="submit" className="btn btn-primary px-8">
-                                <div className="icon-save"></div>
-                                Save Faculty
+                            <button type="submit" className="btn btn-primary px-8" disabled={isSubmitting}>
+                                {isSubmitting ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                        Saving...
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="icon-save"></div>
+                                        Save Faculty
+                                    </>
+                                )}
                             </button>
                         </div>
                     </form>

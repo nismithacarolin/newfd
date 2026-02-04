@@ -9,7 +9,7 @@ function FacultyList() {
     const [urlDepartment, setUrlDepartment] = React.useState(null);
 
     React.useEffect(() => {
-        Storage.getFaculty().then(data => {
+        DataService.getFaculty().then(data => {
             setAllFaculty(data);
 
             // Check for department query param

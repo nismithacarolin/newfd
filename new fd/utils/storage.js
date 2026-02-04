@@ -1,11 +1,14 @@
-const API_BASE = '/api';
+const API_BASE = 'http://127.0.0.1:5000/api';
 
-const Storage = {
+const DataService = {
     // Helper for fetch
     fetchJSON: async (url, options = {}) => {
         try {
             const response = await fetch(url, options);
-            if (!response.ok) throw new Error('Network response was not ok');
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.error || errData.message || 'Network response was not ok');
+            }
             return await response.json();
         } catch (error) {
             console.error('API Error:', error);
@@ -17,11 +20,11 @@ const Storage = {
     getData: async () => ({}),
 
     getFaculty: async () => {
-        return await Storage.fetchJSON(`${API_BASE}/faculty`);
+        return await DataService.fetchJSON(`${API_BASE}/faculty`);
     },
 
     addFaculty: async (faculty) => {
-        return await Storage.fetchJSON(`${API_BASE}/faculty`, {
+        return await DataService.fetchJSON(`${API_BASE}/faculty`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(faculty)
@@ -29,11 +32,11 @@ const Storage = {
     },
 
     getDepartments: async () => {
-        return await Storage.fetchJSON(`${API_BASE}/departments`);
+        return await DataService.fetchJSON(`${API_BASE}/departments`);
     },
 
     addDepartment: async (dept) => {
-        return await Storage.fetchJSON(`${API_BASE}/departments`, {
+        return await DataService.fetchJSON(`${API_BASE}/departments`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dept)
@@ -41,11 +44,11 @@ const Storage = {
     },
 
     getAnnouncements: async () => {
-        return await Storage.fetchJSON(`${API_BASE}/announcements`);
+        return await DataService.fetchJSON(`${API_BASE}/announcements`);
     },
 
     addAnnouncement: async (text) => {
-        return await Storage.fetchJSON(`${API_BASE}/announcements`, {
+        return await DataService.fetchJSON(`${API_BASE}/announcements`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ text })
@@ -63,8 +66,29 @@ const Storage = {
 
     updateRequestStatus: async (id, status) => {
         console.log("Request updated (mock)", id, status);
+    },
+
+    getCredentials: async () => {
+        return await DataService.fetchJSON(`${API_BASE}/credentials`);
+    },
+
+    addCredential: async (credential) => {
+        return await DataService.fetchJSON(`${API_BASE}/credentials`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(credential)
+        });
+    },
+
+    deleteCredential: async (id) => {
+        return await DataService.fetchJSON(`${API_BASE}/credentials/${id}`, {
+            method: 'DELETE'
+        });
     }
 };
+
+// Expose to global window object
+window.DataService = DataService;
 
 const Auth = {
     login: async (username, password, role) => {
@@ -78,9 +102,8 @@ const Auth = {
             const data = await response.json();
             if (data.success) {
                 localStorage.setItem('currentUser', JSON.stringify(data.user));
-                return true;
             }
-            return false;
+            return data;
         } catch (e) {
             console.error(e);
             return false;
@@ -88,7 +111,7 @@ const Auth = {
     },
     logout: () => {
         localStorage.removeItem('currentUser');
-        window.location.href = 'index.html';
+        window.location.href = 'index.html?v=logout';
     },
     getCurrentUser: () => {
         const user = localStorage.getItem('currentUser');
@@ -100,3 +123,5 @@ const Auth = {
         }
     }
 };
+
+window.Auth = Auth;

@@ -51,16 +51,23 @@
             @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
         }
     }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .animate-slide-in {
+            animation: slideIn 0.5s ease-out forwards;
+        }
     </style>
 </head>
 
 <body>
     <div id="root"></div>
     <!-- Shared Utils and Components -->
-    <script type="text/babel" src="utils/storage.js"></script>
+    <script type="text/babel" src="utils/storage.js?v=4"></script>
 
     <!-- Page Specific Script -->
-    <script type="text/babel" src="app.js"></script>
+    <script type="text/babel" src="app.js?v=5"></script>
 </body>
 
 </html>

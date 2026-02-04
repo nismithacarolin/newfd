@@ -26,7 +26,8 @@ function Layout({ children, activePage }) {
 
     // Add "Add New Faculty" only for admin
     if (user.role === 'admin') {
-        menuItems.splice(1, 0, { name: 'Add New Faculty', icon: 'user-plus', link: 'add-faculty.html' });
+        menuItems.splice(1, 0, { name: 'Add New Faculty', icon: 'user-plus', link: 'add-faculty.html?v=9' });
+        menuItems.push({ name: 'Login Credentials', icon: 'key', link: 'credentials.html?v=9' });
     }
 
     return (
@@ -83,8 +84,8 @@ function Layout({ children, activePage }) {
             {/* Main Content */}
             <main className="flex-1 ml-[var(--sidebar-width)] flex flex-col min-h-screen">
                 {/* Header with Banner ONLY */}
-                <header className="bg-gradient-to-r from-blue-900 to-blue-800 border-b border-gray-200 sticky top-0 z-10 shadow-sm h-24 flex items-center px-8">
-                    <h1 className="text-white text-3xl font-bold">College Management System</h1>
+                <header className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+                    <img src="assets/banner.png" className="w-full h-24 object-cover" alt="College Banner" />
                 </header>
 
                 <div className="p-8">

@@ -10,13 +10,14 @@ function Dashboard() {
     const [announcements, setAnnouncements] = React.useState([]);
     const [newAnnouncement, setNewAnnouncement] = React.useState('');
     const [requests, setRequests] = React.useState([]);
+    const [showNotification, setShowNotification] = React.useState(null);
 
     React.useEffect(() => {
         Promise.all([
-            Storage.getFaculty(),
-            Storage.getDepartments(),
-            Storage.getAnnouncements(),
-            Storage.getRequests()
+            DataService.getFaculty(),
+            DataService.getDepartments(),
+            DataService.getAnnouncements(),
+            DataService.getRequests()
         ]).then(([faculty, depts, announce, reqs]) => {
 
             // Calculate stats
@@ -36,15 +37,34 @@ function Dashboard() {
             });
             setAnnouncements(announce);
             setRequests(reqs.filter(r => r.status === 'Pending'));
+
+            // Check for new announcement (today)
+            if (announce.length > 0) {
+                const latest = announce[0];
+                const today = new Date().toISOString().split('T')[0];
+                if (latest.date === today && user.role === 'faculty') {
+                    // Simple simulated "Push" notification
+                    if (!localDataService.getItem(`seen_announcement_${latest.id}`)) {
+                        setShowNotification(latest);
+                    }
+                }
+            }
         });
-    }, []);
+    }, [user]);
+
+    const handleDismissNotification = () => {
+        if (showNotification) {
+            localDataService.setItem(`seen_announcement_${showNotification.id}`, 'true');
+            setShowNotification(null);
+        }
+    };
 
     const handlePostAnnouncement = (e) => {
         e.preventDefault();
         if (!newAnnouncement.trim()) return;
 
-        Storage.addAnnouncement(newAnnouncement)
-            .then(() => Storage.getAnnouncements())
+        DataService.addAnnouncement(newAnnouncement)
+            .then(() => DataService.getAnnouncements())
             .then(data => {
                 setAnnouncements(data);
                 setNewAnnouncement('');
@@ -52,9 +72,9 @@ function Dashboard() {
     };
 
     const handleActionRequest = (id, status) => {
-        Storage.updateRequestStatus(id, status).then(() => {
+        DataService.updateRequestStatus(id, status).then(() => {
             // Refresh requests
-            Storage.getRequests().then(reqs => {
+            DataService.getRequests().then(reqs => {
                 setRequests(reqs.filter(r => r.status === 'Pending'));
             });
         });
@@ -251,6 +271,29 @@ function Dashboard() {
                     </div>
                 </div>
             </div>
+            {/* Notification Toast */}
+            {showNotification && (
+                <div className="fixed bottom-4 right-4 bg-white border-l-4 border-blue-500 shadow-2xl rounded-lg p-4 max-w-sm animate-slide-in z-50">
+                    <div className="flex items-start">
+                        <div className="flex-shrink-0">
+                            <div className="icon-bell text-blue-500 text-xl"></div>
+                        </div>
+                        <div className="ml-3 w-0 flex-1 pt-0.5">
+                            <p className="text-sm font-medium text-gray-900">New Announcement</p>
+                            <p className="mt-1 text-sm text-gray-500">{showNotification.text}</p>
+                        </div>
+                        <div className="ml-4 flex-shrink-0 flex">
+                            <button
+                                className="bg-white rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none"
+                                onClick={handleDismissNotification}
+                            >
+                                <span className="sr-only">Close</span>
+                                <div className="icon-x text-lg"></div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </Layout>
     );
 }

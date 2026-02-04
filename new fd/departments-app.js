@@ -6,7 +6,7 @@ function Departments() {
     const [newDept, setNewDept] = React.useState({ name: '', code: '', hod: '' });
 
     React.useEffect(() => {
-        Storage.getDepartments().then(data => setDepartments(data));
+        DataService.getDepartments().then(data => setDepartments(data));
     }, []);
 
     // Safety check: if no user, render nothing (Layout will handle redirect)
@@ -25,8 +25,8 @@ function Departments() {
     const handleAddDept = (e) => {
         e.preventDefault();
         if (newDept.name && newDept.code) {
-            Storage.addDepartment(newDept)
-                .then(() => Storage.getDepartments())
+            DataService.addDepartment(newDept)
+                .then(() => DataService.getDepartments())
                 .then(data => {
                     setDepartments(data);
                     setIsAddModalOpen(false);
