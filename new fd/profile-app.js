@@ -8,7 +8,7 @@ function Profile() {
         e.preventDefault();
         if (!requestText.trim()) return;
 
-        DataService.addRequest({
+        Storage.addRequest({
             userId: user.id,
             userName: `${user.firstName || user.name} ${user.lastName || ''}`,
             text: requestText,

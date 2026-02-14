@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,14 +7,14 @@
     <meta name="description" content="College Faculty Management System Login">
     <meta name="keywords" content="college, faculty, management, admin, dashboard">
 
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://resource.trickle.so/vendor_lib/unpkg/react@18/umd/react.production.min.js"></script>
+    <script src="https://resource.trickle.so/vendor_lib/unpkg/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://resource.trickle.so/vendor_lib/unpkg/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://resource.trickle.so/vendor_lib/unpkg/lucide-static@0.516.0/font/lucide.css" rel="stylesheet">
 
     <style type="text/tailwindcss">
-        @layer theme {
+    @layer theme {
         :root {
             --primary-color: #1e3a8a; /* Blue 900 */
             --primary-hover: #172554;
@@ -51,23 +50,14 @@
             @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
         }
     }
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        .animate-slide-in {
-            animation: slideIn 0.5s ease-out forwards;
-        }
     </style>
 </head>
-
 <body>
     <div id="root"></div>
     <!-- Shared Utils and Components -->
-    <script type="text/babel" src="utils/storage.js?v=4"></script>
-
+    <script type="text/babel" src="utils/storage.js"></script>
+    
     <!-- Page Specific Script -->
-    <script type="text/babel" src="app.js?v=5"></script>
+    <script type="text/babel" src="app.js"></script>
 </body>
-
 </html>

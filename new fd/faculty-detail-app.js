@@ -6,17 +6,13 @@ function FacultyDetail() {
     React.useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const id = urlParams.get('id');
-
+        
         if (id) {
-            DataService.getFaculty().then(allFaculty => {
-                // Ensure ID comparison works for both string/int
-                const found = allFaculty.find(f => f.id == id);
-                setFaculty(found);
-                setLoading(false);
-            });
-        } else {
-            setLoading(false);
+            const allFaculty = Storage.getFaculty();
+            const found = allFaculty.find(f => f.id == id); // Loose equality for string/number match
+            setFaculty(found);
         }
+        setLoading(false);
     }, []);
 
     const handleDownloadPDF = () => {
@@ -28,7 +24,7 @@ function FacultyDetail() {
             html2canvas: { scale: 2 },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
-
+        
         // Hide button during generation if needed, but here we select specific ID
         html2pdf().set(opt).from(element).save();
     };
@@ -48,7 +44,7 @@ function FacultyDetail() {
     if (!faculty) {
         return (
             <Layout activePage="Faculty Details">
-                <div className="flex flex-col items-center justify-center h-64 text-center">
+                 <div className="flex flex-col items-center justify-center h-64 text-center">
                     <div className="icon-search-x text-4xl text-gray-300 mb-2"></div>
                     <div className="text-gray-500 mb-4">Faculty member not found.</div>
                     <a href="faculty-list.html" className="btn btn-primary">Back to Directory</a>
@@ -60,8 +56,8 @@ function FacultyDetail() {
     return (
         <Layout activePage="Faculty Detail View">
             <div className="max-w-4xl mx-auto mb-8">
-                <button
-                    onClick={() => window.location.href = 'faculty-list.html'}
+                <button 
+                    onClick={() => window.location.href = 'faculty-list.html'} 
                     className="flex items-center text-sm text-gray-500 hover:text-[var(--primary-color)] mb-4 transition-colors"
                 >
                     <div className="icon-arrow-left text-lg mr-1"></div>
@@ -73,7 +69,7 @@ function FacultyDetail() {
                     {/* Header Banner in PDF */}
                     <div className="h-32 bg-gradient-to-r from-[var(--primary-color)] to-blue-800 relative">
                         <div className="absolute -bottom-12 left-8">
-                            <div className="w-24 h-24 rounded-full border-4 border-white bg-gray-100 flex items-center justify-center text-3xl font-bold text-gray-600">
+                             <div className="w-24 h-24 rounded-full border-4 border-white bg-gray-100 flex items-center justify-center text-3xl font-bold text-gray-600">
                                 {faculty.firstName[0]}{faculty.lastName[0]}
                             </div>
                         </div>
@@ -156,7 +152,7 @@ function FacultyDetail() {
                         </div>
 
                         <div className="mt-8 pt-8 border-t border-gray-100">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div>
                                     <h4 className="font-bold text-gray-800 mb-3 text-sm uppercase tracking-wide">Specialization</h4>
                                     <p className="text-gray-600 text-sm bg-gray-50 p-3 rounded-lg border border-gray-100">
@@ -169,14 +165,14 @@ function FacultyDetail() {
                                         {faculty.awards || faculty.publications || "No records found."}
                                     </p>
                                 </div>
-                            </div>
+                             </div>
                         </div>
                     </div>
                 </div>
-
+                
                 {/* Action Buttons (Not visible in PDF) */}
                 <div className="mt-6 flex justify-end">
-                    <button
+                    <button 
                         onClick={handleDownloadPDF}
                         className="btn btn-primary"
                     >

@@ -10,74 +10,45 @@ function Dashboard() {
     const [announcements, setAnnouncements] = React.useState([]);
     const [newAnnouncement, setNewAnnouncement] = React.useState('');
     const [requests, setRequests] = React.useState([]);
-    const [showNotification, setShowNotification] = React.useState(null);
 
     React.useEffect(() => {
-        Promise.all([
-            DataService.getFaculty(),
-            DataService.getDepartments(),
-            DataService.getAnnouncements(),
-            DataService.getRequests()
-        ]).then(([faculty, depts, announce, reqs]) => {
+        const faculty = Storage.getFaculty();
+        const depts = Storage.getDepartments();
+        const announce = Storage.getAnnouncements();
+        const reqs = Storage.getRequests() || [];
 
-            // Calculate stats
-            const currentYear = new Date().getFullYear();
-            const newJoiners = faculty.filter(f => {
-                if (!f.joinedDate) return false;
-                const joinYear = new Date(f.joinedDate).getFullYear();
-                return joinYear >= currentYear - 1;
-            });
-
-            setStats({
-                facultyCount: faculty.length,
-                deptCount: depts.length,
-                hodCount: depts.filter(d => d.hod).length,
-                newFacultyCount: newJoiners.length,
-                newFaculty: newJoiners.slice(0, 5) // Top 5 recent
-            });
-            setAnnouncements(announce);
-            setRequests(reqs.filter(r => r.status === 'Pending'));
-
-            // Check for new announcement (today)
-            if (announce.length > 0) {
-                const latest = announce[0];
-                const today = new Date().toISOString().split('T')[0];
-                if (latest.date === today && user.role === 'faculty') {
-                    // Simple simulated "Push" notification
-                    if (!localDataService.getItem(`seen_announcement_${latest.id}`)) {
-                        setShowNotification(latest);
-                    }
-                }
-            }
+        // Calculate stats
+        const currentYear = new Date().getFullYear();
+        const newJoiners = faculty.filter(f => {
+            if (!f.joinedDate) return false;
+            const joinYear = new Date(f.joinedDate).getFullYear();
+            return joinYear >= currentYear - 1; // Considered new if joined this year or last year
         });
-    }, [user]);
 
-    const handleDismissNotification = () => {
-        if (showNotification) {
-            localDataService.setItem(`seen_announcement_${showNotification.id}`, 'true');
-            setShowNotification(null);
-        }
-    };
+        setStats({
+            facultyCount: faculty.length,
+            deptCount: depts.length,
+            hodCount: depts.filter(d => d.hod).length,
+            newFacultyCount: newJoiners.length,
+            newFaculty: newJoiners.slice(0, 5) // Top 5 recent
+        });
+        setAnnouncements(announce);
+        setRequests(reqs.filter(r => r.status === 'Pending')); // Only show pending requests
+    }, []);
 
     const handlePostAnnouncement = (e) => {
         e.preventDefault();
-        if (!newAnnouncement.trim()) return;
-
-        DataService.addAnnouncement(newAnnouncement)
-            .then(() => DataService.getAnnouncements())
-            .then(data => {
-                setAnnouncements(data);
-                setNewAnnouncement('');
-            });
+        if(!newAnnouncement.trim()) return;
+        Storage.addAnnouncement(newAnnouncement);
+        setAnnouncements(Storage.getAnnouncements());
+        setNewAnnouncement('');
     };
 
     const handleActionRequest = (id, status) => {
-        DataService.updateRequestStatus(id, status).then(() => {
-            // Refresh requests
-            DataService.getRequests().then(reqs => {
-                setRequests(reqs.filter(r => r.status === 'Pending'));
-            });
-        });
+        Storage.updateRequestStatus(id, status);
+        // Refresh requests
+        const reqs = Storage.getRequests() || [];
+        setRequests(reqs.filter(r => r.status === 'Pending'));
     };
 
     // Faculty View
@@ -111,8 +82,8 @@ function Dashboard() {
                         <p className="text-gray-600">Have a great day at work. Check your schedule and profile for updates.</p>
                     </div>
 
-                    {/* Basic Stats for Faculty */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Basic Stats for Faculty */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="card bg-gradient-to-br from-purple-500 to-indigo-600 text-white border-none">
                             <div className="flex justify-between items-start">
                                 <div>
@@ -208,7 +179,7 @@ function Dashboard() {
                                     Broadcast
                                 </button>
                             </form>
-
+                            
                             {/* Recent Announcements List */}
                             <div className="mt-6">
                                 <h4 className="text-xs font-bold text-blue-800 uppercase tracking-wide mb-3">Recent Broadcasts</h4>
@@ -222,7 +193,7 @@ function Dashboard() {
                                 </div>
                             </div>
                         </div>
-
+                        
                         {/* Mail Box / Requests */}
                         <div className="card h-fit">
                             <div className="flex items-center justify-between mb-4">
@@ -234,7 +205,7 @@ function Dashboard() {
                                     <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{requests.length}</span>
                                 )}
                             </div>
-
+                            
                             {requests.length > 0 ? (
                                 <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
                                     {requests.map(req => (
@@ -245,13 +216,13 @@ function Dashboard() {
                                             </div>
                                             <p className="text-gray-600 mb-3 italic">"{req.text}"</p>
                                             <div className="flex gap-2 justify-end">
-                                                <button
+                                                <button 
                                                     onClick={() => handleActionRequest(req.id, 'Dismissed')}
                                                     className="px-3 py-1 bg-white border border-gray-200 text-gray-600 rounded hover:bg-gray-50 text-xs transition-colors"
                                                 >
                                                     Dismiss
                                                 </button>
-                                                <button
+                                                <button 
                                                     onClick={() => handleActionRequest(req.id, 'Done')}
                                                     className="px-3 py-1 bg-[var(--primary-color)] text-white rounded hover:opacity-90 text-xs transition-colors"
                                                 >
@@ -271,29 +242,6 @@ function Dashboard() {
                     </div>
                 </div>
             </div>
-            {/* Notification Toast */}
-            {showNotification && (
-                <div className="fixed bottom-4 right-4 bg-white border-l-4 border-blue-500 shadow-2xl rounded-lg p-4 max-w-sm animate-slide-in z-50">
-                    <div className="flex items-start">
-                        <div className="flex-shrink-0">
-                            <div className="icon-bell text-blue-500 text-xl"></div>
-                        </div>
-                        <div className="ml-3 w-0 flex-1 pt-0.5">
-                            <p className="text-sm font-medium text-gray-900">New Announcement</p>
-                            <p className="mt-1 text-sm text-gray-500">{showNotification.text}</p>
-                        </div>
-                        <div className="ml-4 flex-shrink-0 flex">
-                            <button
-                                className="bg-white rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none"
-                                onClick={handleDismissNotification}
-                            >
-                                <span className="sr-only">Close</span>
-                                <div className="icon-x text-lg"></div>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </Layout>
     );
 }

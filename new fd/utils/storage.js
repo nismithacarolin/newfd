@@ -1,127 +1,83 @@
-const API_BASE = 'http://127.0.0.1:5000/api';
+const API_BASE = "api";
 
-const DataService = {
-    // Helper for fetch
-    fetchJSON: async (url, options = {}) => {
-        try {
-            const response = await fetch(url, options);
-            if (!response.ok) {
-                const errData = await response.json().catch(() => ({}));
-                throw new Error(errData.error || errData.message || 'Network response was not ok');
-            }
-            return await response.json();
-        } catch (error) {
-            console.error('API Error:', error);
-            throw error;
-        }
-    },
+/* =========================
+   FACULTY (MySQL)
+   ========================= */
 
-    // Legacy method support if needed, or just return empty
-    getData: async () => ({}),
+const Storage = {
+  // GET faculty from database
+  getFaculty: async () => {
+    const res = await fetch(`${API_BASE}/getFaculty.php`);
+    return await res.json();
+  },
 
-    getFaculty: async () => {
-        return await DataService.fetchJSON(`${API_BASE}/faculty`);
-    },
+  // ADD faculty to database
+  addFaculty: async (faculty) => {
+    const formData = new FormData();
+    Object.keys(faculty).forEach(key => {
+      formData.append(key, faculty[key]);
+    });
 
-    addFaculty: async (faculty) => {
-        return await DataService.fetchJSON(`${API_BASE}/faculty`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(faculty)
-        });
-    },
+    const res = await fetch(`${API_BASE}/addFaculty.php`, {
+      method: "POST",
+      body: formData
+    });
 
-    getDepartments: async () => {
-        return await DataService.fetchJSON(`${API_BASE}/departments`);
-    },
+    return await res.text();
+  },
 
-    addDepartment: async (dept) => {
-        return await DataService.fetchJSON(`${API_BASE}/departments`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(dept)
-        });
-    },
+  /* =========================
+     BELOW DATA CAN STAY MOCK
+     ========================= */
 
-    getAnnouncements: async () => {
-        return await DataService.fetchJSON(`${API_BASE}/announcements`);
-    },
+  getDepartments: () => ([
+    { id: 1, name: "Computer Science", code: "CS", hod: "Dr. Alan Turing" },
+    { id: 2, name: "Information Technology", code: "IT", hod: "Dr. Grace Hopper" },
+    { id: 3, name: "Mechanical Engineering", code: "ME", hod: "Dr. Isaac Newton" },
+    { id: 4, name: "Civil Engineering", code: "CE", hod: "Dr. Tesla" }
+  ]),
 
-    addAnnouncement: async (text) => {
-        return await DataService.fetchJSON(`${API_BASE}/announcements`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text })
-        });
-    },
+  getAnnouncements: () => ([
+    { id: 1, text: "Faculty meeting scheduled for next Friday at 10 AM.", date: "2025-12-20" },
+    { id: 2, text: "Semester exams will commence from Jan 5th.", date: "2025-12-18" }
+  ]),
 
-    getRequests: async () => {
-        // Mock implementation for requests as DB schema didn't prioritize it yet, returning empty or could implement
-        return [];
-    },
+  getRequests: () => [],
 
-    addRequest: async (req) => {
-        console.log("Request added (mock)", req);
-    },
+  addRequest: () => alert("Request feature demo only"),
 
-    updateRequestStatus: async (id, status) => {
-        console.log("Request updated (mock)", id, status);
-    },
-
-    getCredentials: async () => {
-        return await DataService.fetchJSON(`${API_BASE}/credentials`);
-    },
-
-    addCredential: async (credential) => {
-        return await DataService.fetchJSON(`${API_BASE}/credentials`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(credential)
-        });
-    },
-
-    deleteCredential: async (id) => {
-        return await DataService.fetchJSON(`${API_BASE}/credentials/${id}`, {
-            method: 'DELETE'
-        });
-    }
+  updateRequestStatus: () => alert("Request feature demo only")
 };
 
-// Expose to global window object
-window.DataService = DataService;
+/* =========================
+   AUTH (TEMP – UI ONLY)
+   ========================= */
 
 const Auth = {
-    login: async (username, password, role) => {
-        try {
-            const response = await fetch(`${API_BASE}/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password, role })
-            });
-
-            const data = await response.json();
-            if (data.success) {
-                localStorage.setItem('currentUser', JSON.stringify(data.user));
-            }
-            return data;
-        } catch (e) {
-            console.error(e);
-            return false;
-        }
-    },
-    logout: () => {
-        localStorage.removeItem('currentUser');
-        window.location.href = 'index.html?v=logout';
-    },
-    getCurrentUser: () => {
-        const user = localStorage.getItem('currentUser');
-        return user ? JSON.parse(user) : null;
-    },
-    requireAuth: () => {
-        if (!localStorage.getItem('currentUser')) {
-            window.location.href = 'index.html';
-        }
+  login: (username, password, type) => {
+    if (password === "123") {
+      localStorage.setItem("currentUser", JSON.stringify({
+        role: type,
+        name: username
+      }));
+      return true;
     }
-};
+    return false;
+  },
 
-window.Auth = Auth;
+  logout: () => {
+    localStorage.removeItem("currentUser");
+    window.location.href = "index.html";
+  },
+
+  getCurrentUser: () => {
+    const user = localStorage.getItem("currentUser");
+    return user ? JSON.parse(user) : null;
+  },
+
+  requireAuth: () => {
+    if (!localStorage.getItem("currentUser")) {
+      window.location.href = "index.html";
+    }
+  }
+};
