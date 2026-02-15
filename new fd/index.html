@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College CMS - Login</title>
+    <meta name="description" content="College Faculty Management System Login">
+    <meta name="keywords" content="college, faculty, management, admin, dashboard">
+
+    <script src="https://resource.trickle.so/vendor_lib/unpkg/react@18/umd/react.production.min.js"></script>
+    <script src="https://resource.trickle.so/vendor_lib/unpkg/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://resource.trickle.so/vendor_lib/unpkg/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://resource.trickle.so/vendor_lib/unpkg/lucide-static@0.516.0/font/lucide.css" rel="stylesheet">
+
+    <style type="text/tailwindcss">
+    @layer theme {
+        :root {
+            --primary-color: #1e3a8a; /* Blue 900 */
+            --primary-hover: #172554;
+            --secondary-color: #f59e0b; /* Amber 500 */
+            --bg-color: #f3f4f6;
+            --sidebar-width: 260px;
+        }
+    }
+
+    @layer base {
+        body {
+            @apply bg-[var(--bg-color)] text-gray-800 font-sans;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            @apply font-bold text-gray-900;
+        }
+    }
+
+    @layer components {
+        .btn {
+            @apply px-4 py-2 rounded-md font-medium transition-colors duration-200 flex items-center justify-center gap-2;
+        }
+        .btn-primary {
+            @apply bg-[var(--primary-color)] text-white hover:bg-[var(--primary-hover)];
+        }
+        .btn-secondary {
+            @apply bg-white text-gray-700 border border-gray-300 hover:bg-gray-50;
+        }
+        .input-field {
+            @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)] focus:border-transparent;
+        }
+        .card {
+            @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
+        }
+    }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <!-- Shared Utils and Components -->
+    <script type="text/babel" src="utils/storage.js"></script>
+    
+    <!-- Page Specific Script -->
+    <script type="text/babel" src="app.js"></script>
+</body>
+</html>
