@@ -1,0 +1,7 @@
+=== ADMIN CREDENTIALS ===
+User: admin, Pass: 1233, Role: admin
+
+=== FACULTY CREDENTIALS ===
+Name: John Doe, Phone: N/A, Expected Password: Invalid Phone
+Name: Jane Smith, Phone: N/A, Expected Password: Invalid Phone
+Name: Nismitha carolin A, Phone: 8754988496, Expected Password: 8754
