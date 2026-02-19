@@ -10,6 +10,8 @@ function AddFaculty() {
         type: 'Aided',
         shift: 'Shift I',
         designation: '',
+        profileImage: '', // Profile Image URL (text fallback)
+        profileImageFile: null, // File Object
         isHod: false, // New Field
         specialization: '', // Area of Specialisation
         education: '',
@@ -62,11 +64,15 @@ function AddFaculty() {
     }
 
     const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: type === 'checkbox' ? checked : value
-        }));
+        const { name, value, type, checked, files } = e.target;
+        if (type === 'file') {
+            setFormData(prev => ({ ...prev, [name]: files[0] }));
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [name]: type === 'checkbox' ? checked : value
+            }));
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -83,14 +89,25 @@ function AddFaculty() {
                 return;
             }
 
-            await DataService.addFaculty(formData);
+            // Create FormData
+            const data = new FormData();
+            Object.keys(formData).forEach(key => {
+                // If key is profileImageFile, appends it as profileImageFile
+                if (key === 'profileImageFile' && formData[key]) {
+                    data.append('profileImageFile', formData[key]);
+                } else if (key !== 'profileImageFile') {
+                    data.append(key, formData[key]);
+                }
+            });
+
+            await DataService.addFaculty(data);
 
             setMessage({ type: 'success', text: 'Faculty added successfully!' });
 
             // Reset form
             setFormData({
                 firstName: '', lastName: '', department: departments[0]?.name || '', email: '',
-                type: 'Aided', shift: 'Shift I', designation: '', isHod: false, specialization: '', education: '',
+                type: 'Aided', shift: 'Shift I', designation: '', profileImage: '', profileImageFile: null, isHod: false, specialization: '', education: '',
                 otherQualifications: '', expTeaching: '', expResearch: '', expIndustry: '',
                 mobile: '', irinsLink: '', linkedinLink: '', resMphil: '', resPhdCompleted: '',
                 resPhdProgress: '', pubUgc: '', pubScopus: '', pubPeerReviewed: '', pubProceedings: '',
@@ -162,6 +179,10 @@ function AddFaculty() {
                                         <option value="Aided">Aided</option>
                                         <option value="Self Finance">Self Finance</option>
                                     </select>
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="input-label">Profile Image Upload</label>
+                                    <input type="file" name="profileImageFile" onChange={handleChange} className="input-field p-1" accept="image/*" />
                                 </div>
                                 <div>
                                     <label className="input-label">Shift</label>

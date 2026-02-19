@@ -1,19 +1,13 @@
-from server import app, db, LoginCredential
+from server import app, db, LoginCredential, Faculty
 
 def inspect_admin():
     with app.app_context():
         print("--- INSPECTING ADMIN CREDENTIALS ---")
-        admin = LoginCredential.query.filter_by(username='admin').first()
-        if admin:
-            print(f"ID: {admin.id}")
-            print(f"Username: '{admin.username}' (len={len(admin.username)})")
-            print(f"Password: '{admin.password}' (len={len(admin.password)})")
-            print(f"Role:     '{admin.role}' (len={len(admin.role)})")
-            
-            # Check byte representation to find hidden chars
-            print(f"Password Bytes: {admin.password.encode('utf-8')}")
-        else:
-            print("Admin user not found in DB!")
+        print("--- INSPECTING FACULTY ---")
+        faculty = Faculty.query.all()
+        for f in faculty:
+            print(f"ID: {f.id}, Name: {f.first_name} {f.last_name}, Email: {f.email}")
+            print(f"   Image: {f.profile_image}")
 
 if __name__ == "__main__":
     inspect_admin()

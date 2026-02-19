@@ -24,18 +24,20 @@ const DataService = {
     },
 
     addFaculty: async (faculty) => {
+        const isFormData = faculty instanceof FormData;
         return await DataService.fetchJSON(`${API_BASE}/faculty`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(faculty)
+            headers: isFormData ? {} : { 'Content-Type': 'application/json' },
+            body: isFormData ? faculty : JSON.stringify(faculty)
         });
     },
 
     updateFaculty: async (id, faculty) => {
+        const isFormData = faculty instanceof FormData;
         return await DataService.fetchJSON(`${API_BASE}/faculty/${id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(faculty)
+            headers: isFormData ? {} : { 'Content-Type': 'application/json' },
+            body: isFormData ? faculty : JSON.stringify(faculty)
         });
     },
 

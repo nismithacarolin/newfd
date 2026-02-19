@@ -11,6 +11,8 @@ function EditFaculty() {
         type: 'Aided',
         shift: 'Shift I',
         designation: '',
+        profileImage: '',
+        profileImageFile: null,
         isHod: false,
         specialization: '',
         education: '',
@@ -61,6 +63,7 @@ function EditFaculty() {
                         type: found.type || 'Aided',
                         shift: found.shift || 'Shift I',
                         designation: found.designation || '',
+                        profileImage: found.profileImage || '',
                         isHod: false, // You might need backend logic to know if they are HOD, for now default false or check Dept
                         specialization: found.specialization || '',
                         education: found.education || '',
@@ -112,11 +115,15 @@ function EditFaculty() {
     }
 
     const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: type === 'checkbox' ? checked : value
-        }));
+        const { name, value, type, checked, files } = e.target;
+        if (type === 'file') {
+            setFormData(prev => ({ ...prev, [name]: files[0] }));
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [name]: type === 'checkbox' ? checked : value
+            }));
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -133,7 +140,17 @@ function EditFaculty() {
                 return;
             }
 
-            await DataService.updateFaculty(facultyId, formData);
+            // Create FormData
+            const data = new FormData();
+            Object.keys(formData).forEach(key => {
+                if (key === 'profileImageFile' && formData[key]) {
+                    data.append('profileImageFile', formData[key]);
+                } else if (key !== 'profileImageFile') {
+                    data.append(key, formData[key]);
+                }
+            });
+
+            await DataService.updateFaculty(facultyId, data);
 
             setMessage({ type: 'success', text: 'Faculty profile updated successfully!' });
 
@@ -214,6 +231,13 @@ function EditFaculty() {
                                         <option value="Shift I">Shift I</option>
                                         <option value="Shift II">Shift II</option>
                                     </select>
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="input-label">Profile Image Upload</label>
+                                    <input type="file" name="profileImageFile" onChange={handleChange} className="input-field p-1" accept="image/*" />
+                                    {formData.profileImage && typeof formData.profileImage === 'string' && (
+                                        <p className="text-xs text-gray-500 mt-1">Current: {formData.profileImage.split('/').pop()}</p>
+                                    )}
                                 </div>
                             </div>
                         </div>

@@ -153,6 +153,8 @@ function AdminView({ user }) {
 function FacultyView({ user, facultyData }) {
     const [requestText, setRequestText] = React.useState("");
     const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const [isUploading, setIsUploading] = React.useState(false);
+    const fileInputRef = React.useRef(null);
 
     // Trigger icons on view load
     React.useEffect(() => {
@@ -179,6 +181,50 @@ function FacultyView({ user, facultyData }) {
         }
     };
 
+    const handleImageClick = () => {
+        fileInputRef.current.click();
+    };
+
+    const handleFileChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Basic validation
+        if (!file.type.startsWith('image/')) {
+            alert('Please select an image file.');
+            return;
+        }
+
+        setIsUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append('profileImageFile', file);
+
+            // We need to send other required fields or the backend update might fail if it expects them?
+            // Checking server.py: update_faculty uses .get() mostly, so safe to send partial?
+            // Actually server.py update_faculty updates fields provided.
+            // But we should verify if it clears others? 
+            // The code: faculty.first_name = data.get('firstName', faculty.first_name)
+            // It uses existing value if not provided. So partial update is safe!
+
+            const updatedFac = await DataService.updateFaculty(facultyData.id, formData);
+
+            // Update Local Storage User
+            const currentUser = Auth.getCurrentUser();
+            currentUser.profileImage = updatedFac.profileImage;
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+            alert('Profile image updated successfully!');
+            window.location.reload(); // Refresh to update Sidebar and Profile
+
+        } catch (err) {
+            console.error(err);
+            alert('Failed to upload image: ' + (err.message || 'Unknown error'));
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
     if (!facultyData) {
         return (
             <div className="text-center py-12">
@@ -202,15 +248,45 @@ function FacultyView({ user, facultyData }) {
             <div className="lg:col-span-2 space-y-6">
                 <div className="bg-white shadow-lg rounded-xl overflow-hidden border border-gray-100">
                     <div className="bg-gradient-to-r from-blue-900 to-blue-700 p-6 text-white flex items-center gap-5">
-                        <div className="w-20 h-20 bg-white/20 backdrop-blur rounded-full flex items-center justify-center text-3xl font-bold shadow-inner">
-                            {facultyData.firstName?.[0]}{facultyData.lastName?.[0]}
+
+                        {/* Profile Image with Hover Edit */}
+                        <div className="relative group cursor-pointer" onClick={handleImageClick}>
+                            <div className="w-24 h-24 bg-white/20 backdrop-blur rounded-full flex items-center justify-center text-3xl font-bold shadow-inner overflow-hidden border-2 border-white/50 group-hover:border-white transition-colors">
+                                {facultyData.profileImage ? (
+                                    <img src={facultyData.profileImage} alt="Profile" className="w-full h-full object-cover" />
+                                ) : (
+                                    <span>{facultyData.firstName?.[0]}{facultyData.lastName?.[0]}</span>
+                                )}
+                            </div>
+
+                            {/* Hover Overlay */}
+                            <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <i data-lucide="camera" className="text-white w-6 h-6"></i>
+                            </div>
+
+                            {/* Loader */}
+                            {isUploading && (
+                                <div className="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center z-10">
+                                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                                </div>
+                            )}
+
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleFileChange}
+                                className="hidden"
+                                accept="image/*"
+                            />
                         </div>
+
                         <div>
                             <h2 className="text-2xl font-bold">{facultyData.firstName} {facultyData.lastName}</h2>
                             <p className="text-blue-100 opacity-90">{facultyData.designation}</p>
                             <div className="flex gap-2 text-xs mt-2 opacity-75">
                                 <span className="bg-white/20 px-2 py-0.5 rounded">{facultyData.department}</span>
                                 <span className="bg-white/20 px-2 py-0.5 rounded">{facultyData.type}</span>
+                                {facultyData.shift && <span className="bg-white/20 px-2 py-0.5 rounded">{facultyData.shift}</span>}
                             </div>
                         </div>
                     </div>
@@ -223,14 +299,54 @@ function FacultyView({ user, facultyData }) {
                                 <DetailRow label="Email" value={facultyData.email} />
                                 <DetailRow label="Education" value={facultyData.education} />
                                 <DetailRow label="Specialization" value={facultyData.specialization} />
+                                <DetailRow label="Other Qualifications" value={facultyData.otherQualifications} />
+                                <DetailRow label="IRINS Link" value={facultyData.irinsLink ? <a href={facultyData.irinsLink} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">View Profile</a> : null} />
+                                <DetailRow label="LinkedIn" value={facultyData.linkedinLink ? <a href={facultyData.linkedinLink} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">View Profile</a> : null} />
                             </tbody>
                         </table>
 
                         <h3 className="font-bold text-gray-800 mb-3 border-b pb-2">Experience</h3>
                         <table className="w-full mb-6">
                             <tbody>
-                                <DetailRow label="Teaching" value={facultyData.expTeaching + " Years"} />
-                                <DetailRow label="Research" value={facultyData.expResearch + " Years"} />
+                                <DetailRow label="Teaching" value={facultyData.expTeaching ? facultyData.expTeaching + " Years" : null} />
+                                <DetailRow label="Research" value={facultyData.expResearch ? facultyData.expResearch + " Years" : null} />
+                                <DetailRow label="Industry" value={facultyData.expIndustry ? facultyData.expIndustry + " Years" : null} />
+                            </tbody>
+                        </table>
+
+                        <h3 className="font-bold text-gray-800 mb-3 border-b pb-2">Research Supervision</h3>
+                        <table className="w-full mb-6">
+                            <tbody>
+                                <DetailRow label="M.Phil" value={facultyData.resMphil} />
+                                <DetailRow label="Ph.D Completed" value={facultyData.resPhdCompleted} />
+                                <DetailRow label="Ph.D In Progress" value={facultyData.resPhdProgress} />
+                            </tbody>
+                        </table>
+
+                        <h3 className="font-bold text-gray-800 mb-3 border-b pb-2">Publications</h3>
+                        <table className="w-full mb-6">
+                            <tbody>
+                                <DetailRow label="UGC Care Listed" value={facultyData.pubUgc} />
+                                <DetailRow label="Scopus / Web of Science" value={facultyData.pubScopus} />
+                                <DetailRow label="Peer Reviewed (Other)" value={facultyData.pubPeerReviewed} />
+                                <DetailRow label="Conference Proceedings" value={facultyData.pubProceedings} />
+                            </tbody>
+                        </table>
+
+                        <h3 className="font-bold text-gray-800 mb-3 border-b pb-2">Books & Chapters</h3>
+                        <table className="w-full mb-6">
+                            <tbody>
+                                <DetailRow label="Books Authored" value={facultyData.bookAuthor} />
+                                <DetailRow label="Books Co-Authored" value={facultyData.bookCoAuthor} />
+                                <DetailRow label="Book Chapters" value={facultyData.bookChapters} />
+                            </tbody>
+                        </table>
+
+                        <h3 className="font-bold text-gray-800 mb-3 border-b pb-2">Professional Activities</h3>
+                        <table className="w-full mb-6">
+                            <tbody>
+                                <DetailRow label="Journal Editor" value={facultyData.journalEditor} />
+                                <DetailRow label="Journal Reviewer" value={facultyData.journalReviewer} />
                             </tbody>
                         </table>
                     </div>

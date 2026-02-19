@@ -17,6 +17,23 @@ function Layout({ children, activePage }) {
 
     if (!user) return null;
 
+    const [sidebarImage, setSidebarImage] = React.useState(user.profileImage);
+
+    // Sync Profile Image from DB (Fix for stale sidebar)
+    React.useEffect(() => {
+        if (user.role === 'faculty') {
+            DataService.getFaculty().then(allFaculty => {
+                const me = allFaculty.find(f => f.id === user.facultyId || f.firstName === user.name);
+                if (me && me.profileImage && me.profileImage !== user.profileImage) {
+                    setSidebarImage(me.profileImage);
+                    // Also update localStorage for next load
+                    const updatedUser = { ...user, profileImage: me.profileImage };
+                    localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+                }
+            }).catch(err => console.error("Sidebar sync failed", err));
+        }
+    }, [user]);
+
     const menuItems = [
         { name: 'Dashboard', icon: 'layout-dashboard', link: 'dashboard.html' },
         { name: 'Faculty Details', icon: 'users', link: 'faculty-list.html' },
@@ -38,8 +55,12 @@ function Layout({ children, activePage }) {
                 {/* Updated Header with College Name and User Avatar */}
                 <div className="h-24 flex flex-col justify-center px-6 border-b border-gray-100 bg-blue-50/30">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-[var(--primary-color)] flex items-center justify-center text-white font-bold shrink-0 shadow-sm border-2 border-white">
-                            {user.name.charAt(0)}
+                        <div className="w-10 h-10 rounded-full bg-[var(--primary-color)] flex items-center justify-center text-white font-bold shrink-0 shadow-sm border-2 border-white overflow-hidden">
+                            {sidebarImage ? (
+                                <img src={sidebarImage} alt={user.name} className="w-full h-full object-cover" />
+                            ) : (
+                                user.name.charAt(0)
+                            )}
                         </div>
                         <span className="font-bold text-sm text-[var(--primary-color)] leading-tight">
                             PSGR Krishnammal college for women

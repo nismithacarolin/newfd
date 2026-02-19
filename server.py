@@ -3,18 +3,30 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 from flask_cors import CORS
 import os
+import time
 from datetime import datetime
 from db_config import SQLALCHEMY_DATABASE_URI, SQLALCHEMY_TRACK_MODIFICATIONS, SECRET_KEY
+
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__, static_folder='.', static_url_path='')
 # Enable CORS for everyone and all routes
 CORS(app, resources={r"/*": {"origins": "*"}})
 
+app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = SQLALCHEMY_TRACK_MODIFICATIONS
 app.config['SECRET_KEY'] = SECRET_KEY
 
 db = SQLAlchemy(app)
+
+if not os.path.exists(app.config['UPLOAD_FOLDER']):
+    os.makedirs(app.config['UPLOAD_FOLDER'])
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
 # --- Models ---
 # --- Models ---
@@ -61,6 +73,7 @@ class Faculty(db.Model):
     shift = db.Column(db.String(20)) # Shift I / II
     
     # Profile Fields (New)
+    profile_image = db.Column(db.String(500)) # URL to profile image
     designation = db.Column(db.String(100)) # e.g. Assistant Professor
     specialization = db.Column(db.String(200)) # Area of Specialisation
     education = db.Column(db.String(200)) # M.Sc., M.Phil., Ph.D.
@@ -105,6 +118,7 @@ class Faculty(db.Model):
             'email': self.email,
             'type': self.type,
             'shift': self.shift,
+            'profileImage': self.profile_image,
             'designation': self.designation,
             'specialization': self.specialization,
             'education': self.education,
@@ -167,6 +181,10 @@ def health_check():
 def serve_index():
     return send_from_directory('.', 'index.html')
 
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
 @app.route('/<path:path>')
 def serve_static(path):
     if os.path.exists(path):
@@ -181,13 +199,32 @@ def get_faculty():
 
 @app.route('/api/faculty', methods=['POST'])
 def add_faculty():
-    data = request.json
+    # Handle Form Data (Multipart) or JSON
+    if request.content_type.startswith('multipart/form-data'):
+        data = request.form
+        files = request.files
+    else:
+        data = request.json
+        files = {}
+    
     print(f"--- ADD FACULTY HIT: {data} ---")
     
     # Strip whitespace from critical fields
     first_name = data.get('firstName', '').strip()
     mobile = data.get('mobile', '').strip()
     
+    # Handle Profile Image Upload
+    profile_image_path = data.get('profileImage', '') # Default to what was sent if text
+    
+    if 'profileImageFile' in files:
+        file = files['profileImageFile']
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            # Make filename unique
+            filename = f"{int(time.time())}_{filename}"
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            profile_image_path = f"/uploads/{filename}"
+
     new_faculty = Faculty(
         first_name=first_name,
         last_name=data.get('lastName', '').strip(),
@@ -195,6 +232,7 @@ def add_faculty():
         email=data.get('email', '').strip(),
         type=data.get('type'),
         shift=data.get('shift'),
+        profile_image=profile_image_path,
         designation=data.get('designation'),
         specialization=data.get('specialization'),
         education=data.get('education'),
@@ -292,8 +330,24 @@ def update_faculty(id):
     if not faculty:
         return jsonify({'error': 'Faculty not found'}), 404
     
-    data = request.json
+     # Handle Form Data (Multipart) or JSON
+    if request.content_type.startswith('multipart/form-data'):
+        data = request.form
+        files = request.files
+    else:
+        data = request.json
+        files = {}
+
     try:
+        # Handle Profile Image Upload
+        if 'profileImageFile' in files:
+            file = files['profileImageFile']
+            if file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                filename = f"{int(time.time())}_{filename}"
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                faculty.profile_image = f"/uploads/{filename}"
+
         # Update fields
         faculty.first_name = data.get('firstName', faculty.first_name)
         faculty.last_name = data.get('lastName', faculty.last_name)
@@ -301,6 +355,8 @@ def update_faculty(id):
         faculty.email = data.get('email', faculty.email)
         faculty.type = data.get('type', faculty.type)
         faculty.shift = data.get('shift', faculty.shift)
+        # faculty.profile_image is handled above via file upload
+        
         faculty.designation = data.get('designation', faculty.designation)
         faculty.specialization = data.get('specialization', faculty.specialization)
         faculty.education = data.get('education', faculty.education)
@@ -493,9 +549,12 @@ def login():
              if credential_lax.password == password:
                  # Fetch Faculty ID logic for fallback
                  faculty_id = None
+                 profile_image = None
                  if credential_lax.role == 'faculty':
                      fac = Faculty.query.filter(Faculty.first_name.ilike(credential_lax.username)).first()
-                     if fac: faculty_id = fac.id
+                     if fac: 
+                         faculty_id = fac.id
+                         profile_image = fac.profile_image
 
                  return jsonify({
                      'success': True, 
@@ -503,7 +562,8 @@ def login():
                          'name': credential_lax.username, 
                          'role': credential_lax.role, 
                          'id': credential_lax.id,
-                         'facultyId': faculty_id
+                         'facultyId': faculty_id,
+                         'profileImage': profile_image
                      }
                  })
              else:
@@ -514,7 +574,7 @@ def login():
     # 2. Legacy/Hardcoded Logic (Fallback)
     if role == 'admin':
         if username.lower() == 'admin' and (password == '123' or password == '1233'):
-            return jsonify({'success': True, 'user': {'name': 'Administrator', 'role': 'admin', 'id': 0, 'facultyId': None}})
+            return jsonify({'success': True, 'user': {'name': 'Administrator', 'role': 'admin', 'id': 0, 'facultyId': None, 'profileImage': None}})
         else:
              debug_msg += " | Legacy admin check failed."
             
@@ -526,7 +586,7 @@ def login():
             last_4_digits = faculty.mobile.strip()[-4:] if (faculty.mobile and len(faculty.mobile) >= 4) else "XXXX"
             
             if password == first_4_digits or password == last_4_digits or password == "123":
-                 return jsonify({'success': True, 'user': {'name': f"{faculty.first_name} {faculty.last_name}", 'role': 'faculty', 'id': faculty.id, 'facultyId': faculty.id}})
+                 return jsonify({'success': True, 'user': {'name': f"{faculty.first_name} {faculty.last_name}", 'role': 'faculty', 'id': faculty.id, 'facultyId': faculty.id, 'profileImage': faculty.profile_image}})
             else:
                  debug_msg += f" | Faculty found but password mismatch. Input: {password}, Expected: {first_4_digits}"
         else:
