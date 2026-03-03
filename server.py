@@ -339,6 +339,10 @@ def update_faculty(id):
         files = {}
 
     try:
+        print(f"--- UPDATE FACULTY {id} HIT ---")
+        print(f"Data received: {data}")
+        print(f"Files received: {files}")
+
         # Handle Profile Image Upload
         if 'profileImageFile' in files:
             file = files['profileImageFile']

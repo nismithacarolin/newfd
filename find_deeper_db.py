@@ -1,4 +1,4 @@
-import sqlite3
+import mysql.connector
 import os
 
 def check_db_file(path, name):
@@ -8,7 +8,12 @@ def check_db_file(path, name):
         return
 
     try:
-        conn = sqlite3.connect(full_path)
+        conn = mysql.connector.connect(
+            host="localhost",
+            user="your_mysql_user",
+            password="your_mysql_password",
+            database="college_cms"
+        )
         cur = conn.cursor()
         cur.execute("SELECT id, first_name, last_name, email FROM faculty")
         rows = cur.fetchall()

@@ -1,4 +1,4 @@
-import sqlite3
+import mysql.connector
 import os
 
 DB_PATH = "instance/college_cms_v2.db"
@@ -9,7 +9,12 @@ def check_sophia():
         return
 
     try:
-        conn = sqlite3.connect(DB_PATH)
+        conn = mysql.connector.connect(
+            host="localhost",
+            user="your_mysql_user",
+            password="your_mysql_password",
+            database="college_cms"
+        )
         cur = conn.cursor()
         cur.execute("SELECT id, first_name, last_name, profile_image FROM faculty WHERE first_name LIKE '%Sophia%'")
         rows = cur.fetchall()

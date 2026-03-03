@@ -1,39 +1,42 @@
-import sqlite3
+import mysql.connector
 import os
-
-DB_PATH = "instance/college_cms_v2.db"
+from db_config import MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB
 
 def print_db_report():
-    if not os.path.exists(DB_PATH):
-        print("Database not found.")
+    try:
+        conn = mysql.connector.connect(
+            host=MYSQL_HOST,
+            user=MYSQL_USER,
+            password=MYSQL_PASSWORD,
+            database=MYSQL_DB
+        )
+        cur = conn.cursor()
+    except Exception as e:
+        print(f"Error connecting to MySQL: {e}")
         return
 
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
-
     # Get list of tables
-    cur.execute("SELECT name FROM sqlite_master WHERE type='table';")
+    cur.execute("SHOW TABLES;")
     tables = cur.fetchall()
 
     print("========================================")
     print("      COLLEGE CMS DATABASE REPORT       ")
     print("========================================")
-    print(f"Database File: {DB_PATH}\n")
+    print(f"Database: {MYSQL_DB} (MySQL)\n")
 
     for table_name in tables:
         table = table_name[0]
-        if table == 'sqlite_sequence': continue
 
         print(f"TABLE: {table}")
         print("-" * (len(table) + 7))
 
-        # Get Columns
-        cur.execute(f"PRAGMA table_info({table})")
+        # Get Columns in MySQL
+        cur.execute(f"DESCRIBE {table}")
         columns = cur.fetchall()
         print("Schema (Columns):")
         for col in columns:
-            # col[1] is name, col[2] is type
-            print(f"  - {col[1]} ({col[2]})")
+            # col[0] is Field, col[1] is Type
+            print(f"  - {col[0]} ({col[1]})")
 
         # Get Data Count
         cur.execute(f"SELECT COUNT(*) FROM {table}")

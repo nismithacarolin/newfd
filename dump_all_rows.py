@@ -1,4 +1,4 @@
-import sqlite3
+import mysql.connector
 import os
 
 def dump_db(path):
@@ -8,7 +8,12 @@ def dump_db(path):
         return
 
     try:
-        conn = sqlite3.connect(path)
+        conn = mysql.connector.connect(
+            host="localhost",
+            user="your_mysql_user",
+            password="your_mysql_password",
+            database="college_cms"
+        )
         cur = conn.cursor()
         cur.execute("SELECT * FROM faculty")
         rows = cur.fetchall()

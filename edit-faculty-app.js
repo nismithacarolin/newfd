@@ -1,4 +1,3 @@
-
 // Vanilla JS Edit Faculty Logic (Full Field Support)
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -30,13 +29,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     container.innerHTML = `
         <div class="max-w-5xl mx-auto mb-12 animate-fade-in">
             <div class="flex items-center gap-4 mb-6">
-                <button onclick="window.history.back()" class="p-2 bg-white border border-gray-200 rounded-full hover:bg-gray-50 text-gray-600 transition-colors shadow-sm">
+                <button onclick="window.location.href='faculty-list.html'" class="p-2 bg-white border border-gray-200 rounded-full hover:bg-gray-50 text-gray-600 transition-colors shadow-sm">
                     <i data-lucide="arrow-left" class="w-5 h-5"></i>
                 </button>
                 <h1 class="text-3xl font-bold text-gray-900">Edit Faculty: ${faculty.firstName}</h1>
             </div>
 
-            <form id="edit-faculty-form" class="space-y-6">
+            <div id="form-message" class="hidden mb-6 p-4 rounded-lg"></div>
+
+            <form id="edit-faculty-form" class="space-y-6" novalidate onsubmit="return false;">
                 <input type="hidden" name="id" value="${faculty.id}">
 
                 <!-- Basic Information -->
@@ -45,37 +46,40 @@ document.addEventListener('DOMContentLoaded', async () => {
                          <h3 class="text-lg font-bold text-gray-800">Basic Information</h3>
                     </div>
                     <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="input-label">First Name <span class="text-red-500">*</span></label>
-                            <input type="text" name="firstName" value="${faculty.firstName || ''}" class="input-field" required>
-                        </div>
-                        <div>
-                            <label class="input-label">Last Name <span class="text-red-500">*</span></label>
-                            <input type="text" name="lastName" value="${faculty.lastName || ''}" class="input-field" required>
-                        </div>
-                        <div>
-                            <label class="input-label">Email <span class="text-red-500">*</span></label>
-                            <input type="email" name="email" value="${faculty.email || ''}" class="input-field" required>
-                        </div>
-                        <div>
-                            <label class="input-label">Mobile</label>
-                            <input type="tel" name="mobile" value="${faculty.mobile || ''}" class="input-field">
-                        </div>
-                        
-                        <div>
-                            <label class="input-label">Department <span class="text-red-500">*</span></label>
-                            <select name="department" class="input-field" required>
-                                <option value="">Select Department</option>
-                                ${depts.map(d => `<option value="${d.name}" ${faculty.department === d.name ? 'selected' : ''}>${d.name}</option>`).join('')}
-                            </select>
-                        </div>
-                        <div>
-                            <label class="input-label">Designation <span class="text-red-500">*</span></label>
-                            <select name="designation" class="input-field" required>
-                                <option value="">Select Designation</option>
-                                ${['Assistant Professor', 'Associate Professor', 'Professor', 'HOD'].map(opt => `<option value="${opt}" ${faculty.designation === opt ? 'selected' : ''}>${opt}</option>`).join('')}
-                            </select>
-                        </div>
+                         <div>
+                             <label class="input-label">First Name</label>
+                             <input type="text" name="firstName" value="${faculty.firstName || ''}" class="input-field">
+                         </div>
+                         <div>
+                             <label class="input-label">Last Name</label>
+                             <input type="text" name="lastName" value="${faculty.lastName || ''}" class="input-field">
+                         </div>
+                         <div>
+                             <label class="input-label">Email</label>
+                             <input type="email" name="email" value="${faculty.email || ''}" class="input-field">
+                         </div>
+                         <div>
+                             <label class="input-label">Mobile</label>
+                             <input type="tel" name="mobile" value="${faculty.mobile || ''}" class="input-field" placeholder="Without +91">
+                         </div>
+                         
+                         <div>
+                             <label class="input-label">Department</label>
+                             <select name="department" class="input-field">
+                                 <option value="">Select Department</option>
+                                 ${depts.map(d => `<option value="${d.name}" ${faculty.department && faculty.department.trim().toLowerCase() === d.name.trim().toLowerCase() ? 'selected' : ''}>${d.name}</option>`).join('')}
+                             </select>
+                         </div>
+                         <div>
+                             <label class="input-label">Designation</label>
+                             <select name="designation" class="input-field">
+                                 <option value="">Select Designation</option>
+                                 <option value="${faculty.designation}" selected>${faculty.designation}</option>
+                                 ${['Assistant Professor', 'Associate Professor', 'Professor', 'HOD']
+            .filter(opt => opt !== faculty.designation)
+            .map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+                             </select>
+                         </div>
                          
                         <div>
                             <label class="input-label">Staff Type</label>
@@ -98,7 +102,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                          </div>
 
                         <div class="md:col-span-2">
-                             <label class="input-label">Update Profile Image</label>
+                             <label class="input-label">Update Profile Image (Optional)</label>
                              <div class="mt-1 flex items-center gap-4">
                                 <div class="relative w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-300 shrink-0">
                                     ${faculty.profileImage ? `<img src="${faculty.profileImage}" class="w-full h-full object-cover">` : `<i data-lucide="user" class="text-gray-400"></i>`}
@@ -145,8 +149,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                          <h3 class="text-lg font-bold text-gray-800">Contact Links</h3>
                     </div>
                      <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div><label class="input-label">IRINS Link</label><input type="url" name="irinsLink" value="${faculty.irinsLink || ''}" class="input-field" placeholder="https://..."></div>
-                        <div><label class="input-label">LinkedIn Link</label><input type="url" name="linkedinLink" value="${faculty.linkedinLink || ''}" class="input-field" placeholder="https://..."></div>
+                        <div><label class="input-label">IRINS Link</label><input type="text" name="irinsLink" value="${faculty.irinsLink || ''}" class="input-field" placeholder="https://..."></div>
+                        <div><label class="input-label">LinkedIn Link</label><input type="text" name="linkedinLink" value="${faculty.linkedinLink || ''}" class="input-field" placeholder="https://..."></div>
                     </div>
                 </div>
                 
@@ -198,7 +202,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <!-- Action Buttons -->
                 <div class="flex justify-end gap-3 pt-4 pb-8">
                     <button type="button" onclick="window.history.back()" class="px-6 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors">Cancel</button>
-                    <button type="submit" class="px-6 py-2.5 bg-blue-900 text-white rounded-lg hover:bg-blue-800 font-medium shadow-md shadow-blue-900/20 transition-colors flex items-center gap-2">
+                    <!-- DIRECT ONCLICK HANDLER -->
+                    <button type="button" id="save-btn" class="px-6 py-2.5 bg-blue-900 text-white rounded-lg hover:bg-blue-800 font-medium shadow-md shadow-blue-900/20 transition-colors flex items-center gap-2">
                         <i data-lucide="save" class="w-4 h-4"></i> Save Changes
                     </button>
                 </div>
@@ -207,22 +212,52 @@ document.addEventListener('DOMContentLoaded', async () => {
     `;
 
     window.lucide.createIcons();
+
+    // Attach listener directly to button inside the scope
+    document.getElementById('save-btn').addEventListener('click', handleSave);
 });
 
+async function handleSave() {
+    const form = document.getElementById('edit-faculty-form');
+    const msgDiv = document.getElementById('form-message');
+    const btn = document.getElementById('save-btn');
 
-document.addEventListener('submit', async (e) => {
-    if (e.target.id !== 'edit-faculty-form') return;
-    e.preventDefault();
-    const form = e.target;
-    // Get ID manually
+    // Manual ID extraction
     const id = form.querySelector('input[name="id"]').value;
     const formData = new FormData(form);
 
+    // Visual feedback
+    const originalText = btn.innerHTML;
+    btn.innerHTML = 'Saving...';
+    btn.disabled = true;
+
     try {
+        console.log("Sending update...");
         await DataService.updateFaculty(id, formData);
-        alert('Faculty updated successfully!');
-        window.history.back(); // Go back to where we came from (Details or List)
+
+        // Success
+        msgDiv.innerHTML = `
+            <div class="flex items-center gap-2 bg-green-50 text-green-800 px-4 py-3 rounded border border-green-200">
+                <i data-lucide="check-circle" class="w-5 h-5"></i>
+                <span class="font-medium">Faculty Updated Successfully!</span>
+            </div>
+        `;
+        msgDiv.classList.remove('hidden');
+        window.lucide.createIcons();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
     } catch (err) {
-        alert('Error updating faculty: ' + err.message);
+        console.error(err);
+        msgDiv.innerHTML = `
+            <div class="flex items-center gap-2 bg-red-50 text-red-800 px-4 py-3 rounded border border-red-200">
+                <i data-lucide="alert-circle" class="w-5 h-5"></i>
+                <span class="font-medium">Error: ${err.message}</span>
+            </div>
+        `;
+        msgDiv.classList.remove('hidden');
+        window.lucide.createIcons(); // Re-create icons for the error message
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
     }
-});
+}

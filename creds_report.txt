@@ -1,7 +1,11 @@
 === ADMIN CREDENTIALS ===
 User: admin, Pass: 1233, Role: admin
+User: Manimegalai, Pass: 9894, Role: faculty
+User: GAYATHRI, Pass: 9486, Role: faculty
+User: KARPAGAVALLI, Pass: 8825, Role: faculty
+User: SATHIYAKUMARI, Pass: 9843, Role: faculty
+User: SOPHIA, Pass: 9843, Role: faculty
+User: PRINCY, Pass: 9952, Role: faculty
+User: Geethalakshmi, Pass: 9486, Role: faculty
 
 === FACULTY CREDENTIALS ===
-Name: John Doe, Phone: N/A, Expected Password: Invalid Phone
-Name: Jane Smith, Phone: N/A, Expected Password: Invalid Phone
-Name: Nismitha carolin A, Phone: 8754988496, Expected Password: 8754

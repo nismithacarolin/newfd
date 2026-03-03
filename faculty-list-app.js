@@ -139,5 +139,31 @@ window.deleteFaculty = async (id) => {
 }
 
 window.exportToExcel = () => {
-    alert("Export functionality would go here (requires external library like SheetJS, which isn't included).");
+    if (!window.allFacultyData || window.allFacultyData.length === 0) {
+        alert("No data to export");
+        return;
+    }
+
+    const exportData = window.allFacultyData.map(f => ({
+        "First Name": f.firstName,
+        "Last Name": f.lastName,
+        "Email": f.email,
+        "Mobile": f.mobile,
+        "Department": f.department,
+        "Designation": f.designation,
+        "Type": f.type,
+        "Shift": f.shift,
+        "Teaching Exp": f.expTeaching,
+        "Research Exp": f.expResearch,
+        "Industry Exp": f.expIndustry,
+        "Education": f.education,
+        "Specialization": f.specialization,
+        "IRINS": f.irinsLink,
+        "LinkedIn": f.linkedinLink
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Faculty");
+    XLSX.writeFile(wb, "Faculty_Details.xlsx");
 }

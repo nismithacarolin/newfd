@@ -70,14 +70,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <i data-lucide="bell" class="w-5 h-5 text-amber-500"></i> Announcements
                     </h3>
-                    <div class="space-y-4">
-                        ${recentAnns.map(ann => `
-                            <div class="p-4 bg-gray-50 rounded-lg border border-gray-100">
-                                <p class="text-gray-800 text-sm font-medium">${ann.text}</p>
-                                <p class="text-xs text-gray-400 mt-2">${ann.date || 'Today'}</p>
+                    <div class="h-80 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+                         ${recentAnns.map(ann => `
+                            <div class="p-4 bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                                <div class="absolute w-1 h-full bg-amber-400 left-0 top-0"></div>
+                                <p class="text-gray-800 text-sm font-medium pl-2">${ann.text}</p>
+                                <div class="flex justify-between items-center mt-2 pl-2">
+                                     <span class="text-xs text-gray-400 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> ${ann.date || 'Today'}</span>
+                                     <span class="text-xs text-amber-600 font-bold opacity-0 group-hover:opacity-100 transition-opacity">New</span>
+                                </div>
                             </div>
                         `).join('')}
-                        ${recentAnns.length === 0 ? '<p class="text-gray-400 text-sm">No announcements.</p>' : ''}
+                        ${recentAnns.length === 0 ? '<div class="h-full flex flex-col items-center justify-center text-gray-400 space-y-2"><i data-lucide="bell-off" class="w-8 h-8 opacity-20"></i><p>No announcements.</p></div>' : ''}
                     </div>
                     ${user.role === 'admin' ? `
                         <form onsubmit="postAnnouncement(event)" class="mt-4 flex gap-2">

@@ -1,4 +1,4 @@
-import sqlite3
+import mysql.connector
 from server import app, db, Faculty, Department, Announcement, LoginCredential, ChangeRequest
 
 OLD_DB = "instance/college_cms.db"
@@ -9,7 +9,12 @@ def migrate_data():
     
     # Connect to Old DB
     try:
-        conn_old = sqlite3.connect(OLD_DB)
+        conn_old = mysql.connector.connect(
+            host="localhost",
+            user="your_mysql_user",
+            password="your_mysql_password",
+            database="college_cms"
+        )
         conn_old.row_factory = sqlite3.Row
         cur_old = conn_old.cursor()
     except Exception as e:

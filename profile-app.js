@@ -122,7 +122,12 @@ function renderFacultyView(container, user, data) {
 
     container.innerHTML = `
         <div class="max-w-6xl mx-auto mb-12 animate-fade-in">
-            <h1 class="text-3xl font-bold text-gray-900 mb-6">My Profile</h1>
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-bold text-gray-900">My Profile</h1>
+                <button onclick="downloadProfile()" class="flex items-center gap-2 px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800 transition-colors shadow-sm text-sm font-medium">
+                    <i data-lucide="download" class="w-4 h-4"></i> Download Profile
+                </button>
+            </div>
             
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <!-- Left: Profile Details -->
@@ -277,4 +282,33 @@ window.submitRequest = async (e, userId, userName) => {
     } catch (err) {
         alert("Failed to send");
     }
+}
+
+window.downloadProfile = () => {
+    // Select the main content column (Profile Details + Experience + etc)
+    const element = document.querySelector('.lg\\:col-span-2');
+
+    if (!element) {
+        alert("Profile content not found to download.");
+        return;
+    }
+
+    const btn = document.querySelector('button[onclick="downloadProfile()"]');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Generating...`;
+    btn.disabled = true;
+
+    const opt = {
+        margin: [10, 10],
+        filename: 'Faculty_Profile.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opt).from(element).save().then(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        window.lucide.createIcons();
+    });
 }

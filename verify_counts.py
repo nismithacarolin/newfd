@@ -1,11 +1,16 @@
-import sqlite3
+import mysql.connector
 import os
 
 NEW_DB_PATH = "instance/college_cms_v2.db"
 if os.path.exists(NEW_DB_PATH):
     print(f"--- INSPECTING NEW DB: {NEW_DB_PATH} ---")
     try:
-        conn = sqlite3.connect(NEW_DB_PATH)
+        conn = mysql.connector.connect(
+            host="localhost",
+            user="your_mysql_user",
+            password="your_mysql_password",
+            database="college_cms"
+        )
         cur = conn.cursor()
         cur.execute("SELECT COUNT(*) FROM faculty")
         print(f"NEW FACULTY COUNT: {cur.fetchone()[0]}")
@@ -21,7 +26,12 @@ OLD_DB_PATH = "instance/college_cms.db"
 if os.path.exists(OLD_DB_PATH):
     print(f"\n--- INSPECTING OLD DB: {OLD_DB_PATH} ---")
     try:
-        conn = sqlite3.connect(OLD_DB_PATH)
+        conn = mysql.connector.connect(
+            host="localhost",
+            user="your_mysql_user",
+            password="your_mysql_password",
+            database="college_cms"
+        )
         cur = conn.cursor()
         
         # Get column names

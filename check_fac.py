@@ -1,5 +1,10 @@
-import sqlite3
-conn = sqlite3.connect("instance/college_cms_v2.db")
+import mysql.connector
+conn = mysql.connector.connect(
+	host="localhost",
+	user="your_mysql_user",
+	password="your_mysql_password",
+	database="college_cms"
+)
 cur = conn.cursor()
 cur.execute("SELECT COUNT(*) FROM faculty")
 print(f"FACULTY COUNT: {cur.fetchone()[0]}")
